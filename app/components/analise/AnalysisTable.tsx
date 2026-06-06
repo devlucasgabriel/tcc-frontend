@@ -22,7 +22,7 @@ export default function AnalysisTable({
         </h2>
       </div>
 
-      <div className="overflow-hidden rounded-lg">
+      <div className="max-h-[300px] overflow-y-auto rounded-lg">
         <table className="w-full">
           <thead className="bg-white">
             <tr>
@@ -44,14 +44,14 @@ export default function AnalysisTable({
             {data.map((compiler) => (
               <>
                 <tr
-                  key={compiler.compiler}
+                  key={compiler.gccVersion}
                   onClick={() => onSelect(compiler)}
                   className={`
                     cursor-pointer border-t transition-colors
                     hover:bg-blue-50
                     ${
                       selectedCompiler ===
-                      compiler.compiler
+                      compiler.gccVersion
                         ? "bg-blue-50"
                         : ""
                     }
@@ -62,12 +62,12 @@ export default function AnalysisTable({
                         <ChevronRight
                         size={16}
                         className={`transition-transform ${
-                            selectedCompiler === compiler.compiler
+                            selectedCompiler === compiler.gccVersion
                             ? "rotate-90"
                             : ""
                         }`}
                         />
-                    {compiler.compiler}
+                    {compiler.gccVersion}
                     </div>
                   </td>
 
@@ -78,7 +78,7 @@ export default function AnalysisTable({
                 </td>
 
                 <td className="p-3 text-center">
-                  {compiler.functions.length}
+                  {compiler.calls.length}
                 </td>
                 </tr>
                 </>

@@ -1,18 +1,36 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload, FileCode, Loader2 } from "lucide-react";
+
+import {
+  Upload,
+  FileCode,
+  Loader2,
+} from "lucide-react";
+
+import { analyzeFile } from "@/services/analysis.service";
+
+import { CompilerAnalysis } from "@/types/analise";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
-export default function FileUpload() {
-  const inputRef = useRef<HTMLInputElement>(null);
+interface Props {
+  onAnalysisFinished: (
+    data: CompilerAnalysis[]
+  ) => void;
+}
 
-  const [file, setFile] = useState<File | null>(
-    null
-  );
+export default function FileUpload({
+  onAnalysisFinished,
+}: Props) {
+  const inputRef =
+    useRef<HTMLInputElement>(null);
 
-  const [error, setError] = useState("");
+  const [file, setFile] =
+    useState<File | null>(null);
+
+  const [error, setError] =
+    useState("");
 
   const [loading, setLoading] =
     useState(false);
@@ -20,7 +38,11 @@ export default function FileUpload() {
   function validateFile(
     selectedFile: File
   ) {
-    if (!selectedFile.name.endsWith(".c")) {
+    if (
+      !selectedFile.name
+        .toLowerCase()
+        .endsWith(".c")
+    ) {
       setError(
         "Apenas arquivos .c são permitidos."
       );
@@ -79,10 +101,15 @@ export default function FileUpload() {
     try {
       setLoading(true);
 
-      // chamada futura para API
+      const result =
+        await analyzeFile(file);
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1500)
+      onAnalysisFinished(result);
+    } catch (error) {
+      console.error(error);
+
+      setError(
+        "Erro ao analisar o arquivo."
       );
     } finally {
       setLoading(false);
@@ -132,7 +159,7 @@ export default function FileUpload() {
       </div>
 
       {file && (
-        <div className="mt-4 flex items-center justify-between rounded-lg border p-4">
+        <div className="mt-4 max-h-[50px] flex items-center justify-between rounded-lg border p-4">
           <div className="flex items-center gap-3">
             <FileCode size={20} />
 

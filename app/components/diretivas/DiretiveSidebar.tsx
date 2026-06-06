@@ -2,7 +2,7 @@ import { Directive } from "@/types/directive";
 
 interface Props {
   directives: Directive[];
-  selected: string;
+  selected: number;
   onSelect: (directive: Directive) => void;
 }
 
@@ -19,7 +19,7 @@ export default function DirectiveSidebar({
         </h2>
       </div>
 
-      <div className="flex flex-col">
+      <div className="flex max-h-full flex-col overflow-y-auto">
         {directives.map((directive) => (
           <button
             key={directive.id}

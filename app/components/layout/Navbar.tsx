@@ -11,11 +11,7 @@ const links = [
   {
     label: "Diretivas",
     href: "/diretivas",
-  },
-  {
-    label: "GOMP",
-    href: "/gomp",
-  },
+  }
 ];
 
 export default function Navbar() {
@@ -25,9 +21,9 @@ export default function Navbar() {
     <header className="border-b bg-white shadow-sm">
       <div className="flex h-16 items-center justify-between px-6">
         {/* Lado esquerdo */}
-        <h1 className="text-2xl font-bold">
-          OpenMP Analyzer
-        </h1>
+        <h2 className="text-2xl font-bold">
+          REPOSITÓRIO DE INFORMAÇÕES SOBRE O ECOSSISTEMA DO OPENMP
+        </h2>
 
         <nav>
           <ul className="flex gap-2">

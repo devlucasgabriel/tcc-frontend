@@ -1,9 +1,9 @@
 interface Props {
-  functions: string[];
+  gompFunctions: string[];
 }
 
 export default function DirectiveFunctions({
-  functions,
+  gompFunctions,
 }: Props) {
   return (
     <section className="h-full rounded-xl border bg-white shadow-sm">
@@ -15,7 +15,7 @@ export default function DirectiveFunctions({
 
       <div className="p-6">
         <ul className="space-y-2">
-          {functions.map((fn) => (
+          {gompFunctions.map((fn) => (
             <li
               key={fn}
               className="rounded-lg bg-blue-50 p-3 font-mono text-sm"

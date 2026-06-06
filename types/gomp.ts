@@ -1,7 +1,7 @@
 export interface Directive {
-  id: number;
+  id: string;
   name: string;
   description: string;
-  sintax: string;
-  gompFunctions: string[]
+  syntax: string;
+  functions: string[];
 }

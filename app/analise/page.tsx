@@ -1,49 +1,30 @@
 "use client";
 
 import { useState } from "react";
+
+
+import { CompilerAnalysis } from "@/types/analise";
 import AnalysisTable from "../components/analise/AnalysisTable";
 import FileUpload from "../components/analise/FileUpload";
 import MetricsChart from "../components/analise/MetricsChart";
 
-
-const data = [
-  {
-    compiler: "GCC",
-    compatible: true,
-    functions: [
-      {
-        name: "GOMP_parallel",
-        occurrences: 12,
-      },
-      {
-        name: "GOMP_barrier",
-        occurrences: 3,
-      },
-      {
-        name: "GOMP_loop_static_start",
-        occurrences: 8,
-      },
-    ],
-  },
-  {
-    compiler: "LLVM",
-    compatible: false,
-    functions: [
-      {
-        name: "GOMP_parallel",
-        occurrences: 4,
-      },
-      {
-        name: "GOMP_barrier",
-        occurrences: 1,
-      },
-    ],
-  },
-];
-
 export default function AnalisePage() {
+  const [data, setData] = useState<
+    CompilerAnalysis[]
+  >([]);
+
   const [selectedCompiler, setSelectedCompiler] =
-    useState(data[0]);
+    useState<CompilerAnalysis | null>(null);
+
+  function handleAnalysisFinished(
+    result: CompilerAnalysis[]
+  ) {
+    setData(result);
+
+    if (result.length > 0) {
+      setSelectedCompiler(result[0]);
+    }
+  }
 
   return (
     <main className="mx-auto max-w-7xl p-6">
@@ -52,22 +33,28 @@ export default function AnalisePage() {
           <AnalysisTable
             data={data}
             selectedCompiler={
-              selectedCompiler.compiler
+              selectedCompiler?.gccVersion ?? ""
             }
             onSelect={setSelectedCompiler}
           />
 
           <MetricsChart
-            compiler={
-              selectedCompiler.compiler
+            gccVersion={
+              selectedCompiler?.gccVersion ??
+              "Nenhum compilador"
             }
-            functions={
-              selectedCompiler.functions
+            calls={
+              selectedCompiler?.calls ??
+              []
             }
           />
         </div>
 
-        <FileUpload />
+        <FileUpload
+          onAnalysisFinished={
+            handleAnalysisFinished
+          }
+        />
       </div>
     </main>
   );

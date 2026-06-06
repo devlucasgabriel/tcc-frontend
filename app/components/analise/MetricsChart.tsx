@@ -10,21 +10,21 @@ import {
 } from "recharts";
 
 interface Props {
-  compiler: string;
-  functions: {
-    name: string;
-    occurrences: number;
+  gccVersion: string;
+  calls: {
+    gompFunction: string;
+    ocorrences: number;
   }[];
 }
 
 export default function MetricsChart({
-  compiler,
-  functions,
+  gccVersion,
+  calls,
 }: Props) {
   return (
     <section className="rounded-xl border bg-white p-6 shadow-sm">
       <h2 className="mb-4 text-xl font-semibold">
-        Funções GOMP - {compiler}
+        Funções GOMP - {gccVersion}
       </h2>
 
       <div className="h-80">
@@ -32,15 +32,13 @@ export default function MetricsChart({
           width="100%"
           height="100%"
         >
-          <BarChart data={functions} barCategoryGap='20%'>
-            <XAxis dataKey="name" />
+          <BarChart data={calls ?? []} barCategoryGap='20%'>
+            <XAxis dataKey="gompFunction" />
 
             <YAxis />
 
-            <Tooltip />
-
             <Bar 
-              dataKey="occurrences"
+              dataKey="ocorrences"
               barSize={60}
               fill='rgb(96 165 250)'
               radius={[4, 4, 0, 0]}  
