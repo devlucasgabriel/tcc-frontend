@@ -6,17 +6,20 @@ import {
   Upload,
   FileCode,
   Loader2,
+  X,
 } from "lucide-react";
 
-import { analyzeFile } from "@/services/analysis.service";
-
-import { CompilerAnalysis } from "@/types/analise";
+import { CompilerAnalysisResults } from "@/types/analise";
+import { analyzeFiles } from "@/services/analysis.service";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
+const MAX_C_FILES = 3;
+const MAX_CPP_FILES = 3;
+const MAX_H_FILES = 9;
 
 interface Props {
   onAnalysisFinished: (
-    data: CompilerAnalysis[]
+    data: CompilerAnalysisResults[]
   ) => void;
 }
 
@@ -26,8 +29,8 @@ export default function FileUpload({
   const inputRef =
     useRef<HTMLInputElement>(null);
 
-  const [file, setFile] =
-    useState<File | null>(null);
+  const [files, setFiles] =
+    useState<File[]>([]);
 
   const [error, setError] =
     useState("");
@@ -35,16 +38,39 @@ export default function FileUpload({
   const [loading, setLoading] =
     useState(false);
 
+  function getFileCounts(fileList: File[]) {
+    return fileList.reduce(
+      (counts, file) => {
+        const name = file.name.toLowerCase();
+
+        if (name.endsWith(".c")) {
+          counts.c += 1;
+        } else if (name.endsWith(".cpp")) {
+          counts.cpp += 1;
+        } else if (name.endsWith(".h")) {
+          counts.h += 1;
+        }
+
+        return counts;
+      },
+      { c: 0, cpp: 0, h: 0 }
+    );
+  }
+
   function validateFile(
-    selectedFile: File
+    selectedFile: File,
+    currentFiles: File[]
   ) {
+    const name = selectedFile.name
+      .toLowerCase();
+
     if (
-      !selectedFile.name
-        .toLowerCase()
-        .endsWith(".c")
+      !name.endsWith(".c") &&
+      !name.endsWith(".cpp") &&
+      !name.endsWith(".h")
     ) {
       setError(
-        "Apenas arquivos .c são permitidos."
+        "Apenas arquivos .c, .cpp e .h são permitidos."
       );
       return false;
     }
@@ -53,33 +79,84 @@ export default function FileUpload({
       selectedFile.size > MAX_FILE_SIZE
     ) {
       setError(
-        "O arquivo deve ter no máximo 2 MB."
+        "Cada arquivo deve ter no máximo 2 MB."
       );
       return false;
     }
 
-    setError("");
+    const counts = getFileCounts(
+      currentFiles
+    );
+
+    if (
+      name.endsWith(".c") &&
+      counts.c >= MAX_C_FILES
+    ) {
+      setError(
+        `Máximo de ${MAX_C_FILES} arquivos .c permitido.`
+      );
+      return false;
+    }
+
+    if (
+      name.endsWith(".cpp") &&
+      counts.cpp >= MAX_CPP_FILES
+    ) {
+      setError(
+        `Máximo de ${MAX_CPP_FILES} arquivos .cpp permitido.`
+      );
+      return false;
+    }
+
+    if (
+      name.endsWith(".h") &&
+      counts.h >= MAX_H_FILES
+    ) {
+      setError(
+        `Máximo de ${MAX_H_FILES} arquivos .h permitido.`
+      );
+      return false;
+    }
+
     return true;
   }
 
-  function handleFile(
-    selectedFile: File
-  ) {
-    if (!validateFile(selectedFile))
-      return;
+  function addFiles(selectedFiles: FileList) {
+    const incomingFiles = Array.from(
+      selectedFiles
+    );
+    const updatedFiles = [...files];
 
-    setFile(selectedFile);
+    for (const selectedFile of incomingFiles) {
+      if (
+        validateFile(selectedFile, updatedFiles)
+      ) {
+        updatedFiles.push(selectedFile);
+      }
+    }
+
+    if (updatedFiles.length !== files.length) {
+      setFiles(updatedFiles);
+      setError("");
+    }
+  }
+
+  function removeFile(index: number) {
+    const updatedFiles = files.filter(
+      (_, i) => i !== index
+    );
+    setFiles(updatedFiles);
   }
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement>
   ) {
-    const selectedFile =
-      e.target.files?.[0];
+    const selectedFiles = e.target.files;
 
-    if (!selectedFile) return;
+    if (!selectedFiles) return;
 
-    handleFile(selectedFile);
+    addFiles(selectedFiles);
+    e.target.value = "";
   }
 
   function handleDrop(
@@ -87,29 +164,28 @@ export default function FileUpload({
   ) {
     e.preventDefault();
 
-    const selectedFile =
-      e.dataTransfer.files?.[0];
+    const selectedFiles =
+      e.dataTransfer.files;
 
-    if (!selectedFile) return;
+    if (!selectedFiles) return;
 
-    handleFile(selectedFile);
+    addFiles(selectedFiles);
   }
 
   async function handleAnalyze() {
-    if (!file) return;
+    if (files.length === 0) return;
 
     try {
       setLoading(true);
 
-      const result =
-        await analyzeFile(file);
+      const result = await analyzeFiles(files)
 
       onAnalysisFinished(result);
     } catch (error) {
       console.error(error);
 
       setError(
-        "Erro ao analisar o arquivo."
+        "Erro ao analisar os arquivos."
       );
     } finally {
       setLoading(false);
@@ -142,40 +218,53 @@ export default function FileUpload({
         <Upload size={40} />
 
         <p className="mt-4 text-lg font-medium">
-          Arraste um arquivo .c aqui
+          Arraste arquivos .c, .cpp e .h aqui
         </p>
 
         <p className="text-sm text-gray-500">
-          ou clique para selecionar
+          ou clique para selecionar até {MAX_C_FILES} arquivos .c, {MAX_CPP_FILES} .cpp e {MAX_H_FILES} arquivos .h
         </p>
 
         <input
           ref={inputRef}
           type="file"
-          accept=".c"
+          accept=".c,.cpp,.h"
+          multiple
           onChange={handleChange}
           className="hidden"
         />
       </div>
 
-      {file && (
-        <div className="mt-4 max-h-[50px] flex items-center justify-between rounded-lg border p-4">
-          <div className="flex items-center gap-3">
-            <FileCode size={20} />
+      {files.length > 0 && (
+        <div className="mt-4 space-y-3">
+          {files.map((file, index) => (
+            <div
+              key={`${file.name}-${index}`}
+              className="flex items-center justify-between rounded-lg border p-4"
+            >
+              <div className="flex items-center gap-3">
+                <FileCode size={20} />
 
-            <div>
-              <p className="font-medium">
-                {file.name}
-              </p>
+                <div>
+                  <p className="font-medium">
+                    {file.name}
+                  </p>
 
-              <p className="text-sm text-gray-500">
-                {(
-                  file.size / 1024
-                ).toFixed(1)}{" "}
-                KB
-              </p>
+                  <p className="text-sm text-gray-500">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => removeFile(index)}
+                className="p-1 text-gray-400 hover:text-red-600 transition"
+                title="Remover arquivo"
+              >
+                <X size={20} />
+              </button>
             </div>
-          </div>
+          ))}
         </div>
       )}
 
@@ -185,10 +274,14 @@ export default function FileUpload({
         </p>
       )}
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-between gap-4">
+        <div className="text-sm text-gray-600">
+          Selecionados: {files.length} arquivo(s)
+        </div>
+
         <button
           onClick={handleAnalyze}
-          disabled={!file || loading}
+          disabled={files.length === 0 || loading}
           className="
             flex items-center gap-2
             rounded-lg bg-blue-600
@@ -207,7 +300,7 @@ export default function FileUpload({
 
           {loading
             ? "Analisando..."
-            : "Analisar Arquivo"}
+            : "Analisar Arquivos"}
         </button>
       </div>
     </section>

@@ -1,13 +1,15 @@
-import { CompilerAnalysis } from "@/types/analise";
+import { CompilerAnalysisResults } from "@/types/analise";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL
 
-export async function analyzeFile(
-  file: File
-): Promise<CompilerAnalysis[]> {
+export async function analyzeFiles(
+  files: File[]
+): Promise<CompilerAnalysisResults[]> {
   const formData = new FormData();
 
-  formData.append("file", file);
+  files.forEach((file) => {
+    formData.append("files", file, file.name);
+  });
 
   const response = await fetch(
     `${backendUrl}analysis/analyze`,

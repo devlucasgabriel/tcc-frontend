@@ -9,7 +9,7 @@ const links = [
     href: "/analise",
   },
   {
-    label: "Diretivas",
+    label: "Informações",
     href: "/diretivas",
   }
 ];
